@@ -22,7 +22,7 @@ pacman::p_load(readxl, tidyverse, dplyr, Rcpp, ggforce, png, writexl, flextable,
 ```{r}
 # Importing the data as well as signing it to a variable 
 getwd() # to check pathway
-OA_data <- read_csv("C:/ANU study/Year 3 2022/BIOL3207/Assignment2/OA_activitydat_20190302_BIOL3207.csv")
+OA_data <- read_csv("C:/ANU study/Year 3 2022/BIOL3207/Assignment2/data/Meta-analysis_OA/OA_activitydat_20190302_BIOL3207.csv")
 
 # Cleaning up the data 
 glimpse(OA_data)
@@ -50,7 +50,7 @@ OA_table <- flextable(OA_sum)
 
 ```{r}
 getwd()
-clark <- read_csv("C:/ANU study/Year 3 2022/BIOL3207/Assignment2/clark_paper_data.csv") # This file contains the metadata
+clark <- read_csv("C:/ANU study/Year 3 2022/BIOL3207/Assignment2/data/Meta-analysis_OA/clark_paper_data.csv") # This file contains the metadata
 
 metadata1 <- cbind(clark, OA_sum) # this function is used to get two data frames and then placed in along together
 metadata1
@@ -65,7 +65,7 @@ final_meta
 
 ```{r}
 getwd()
-ocean_meta <- read_csv("C:/ANU study/Year 3 2022/BIOL3207/Assignment2/ocean_meta_data.csv")
+ocean_meta <- read_csv("C:/ANU study/Year 3 2022/BIOL3207/Assignment2/data/Meta-analysis_OA/ocean_meta_data.csv")
 
 dim(ocean_meta)
 dim(final_meta)
