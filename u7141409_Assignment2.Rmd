@@ -1,0 +1,259 @@
+---
+title: "Assignment #2: Meta-analysis of Ocean Acidification Effects on Behaviour"
+output: html_document
+date: "2022-10-20"
+---
+
+## UNI ID: u7141409
+
+use meta-analysis to: - estimate the overall effect of ocean acidification on behaviour and determine if these effects are general across studies conducting similar experiments; - understand how variable the effect size is within the literature - what factors (biological, methodological, publication practices) explain variation in effect size.
+
+# i) Statistical Analysis and Interpretation
+
+### Downloading packages
+```{r}
+library(pacman)
+devtools::install_github("daniel1noble/orchaRd", force = TRUE) # Install the orchaRd package
+pacman::p_load(readxl, tidyverse, dplyr, Rcpp, ggforce, png, writexl, flextable, metafor, readr, orchaRd)
+```
+
+### 1. Correct analysis of Clark et al. (2020) data (i.e., OA_activitydat_20190302_BIOL3207.csv) to generate the summary statistics (means, SD, N) for each of the fish species’ average activity for each treatment.
+
+```{r}
+# Importing the data as well as signing it to a variable 
+getwd() # to check pathway
+OA_data <- read_csv("C:/ANU study/Year 3 2022/BIOL3207/Assignment2/OA_activitydat_20190302_BIOL3207.csv")
+
+# Cleaning up the data 
+glimpse(OA_data)
+list(unique(OA_data$species)) # To check spelling errors in species 
+list(unique(OA_data$treatment)) # To check spelling errors in treatment
+
+# Omitting NA in the data
+OA <- (na.omit(OA_data))
+
+# The n for each species 
+table(OA$species)
+# The n for treatments 
+table(OA$treatment)
+
+# Creating the necessary summary statistics and using flextable() function to tidy the table
+OA_sum <- (OA %>%
+  group_by(species, treatment) %>% 
+  summarise(mean = mean(activity, na.rm = TRUE), sd = sd(activity, na.rm = TRUE),
+  n = length(unique(animal_id))) %>% rename(Species = "species"))
+
+OA_table <- flextable(OA_sum)
+```
+
+### 2. Through coding, merge the summary statistics generated from 1) with the metadata (i.e., clark_paper_data.csv) from Clark et al. (2020).
+
+```{r}
+getwd()
+clark <- read_csv("C:/ANU study/Year 3 2022/BIOL3207/Assignment2/clark_paper_data.csv") # This file contains the metadata
+
+metadata1 <- cbind(clark, OA_sum) # this function is used to get two data frames and then placed in along together
+metadata1
+
+# Making a final metadata  for each treatment as it was instructed in task 1. 
+final_meta <- pivot_wider(metadata1, names_from = treatment, names_glue = "{treatment}_{.value}", values_from = c("mean", "sd", "n"))  ### Look for a different method.. 
+
+final_meta
+```
+
+### 3. Through coding, correctly merge the combined summary statistics and metadata from Clark et al. (2020) (output from 1 & 2) into the larger meta-analysis dataset (i.e., ocean_meta_data.csv).
+
+```{r}
+getwd()
+ocean_meta <- read_csv("C:/ANU study/Year 3 2022/BIOL3207/Assignment2/ocean_meta_data.csv")
+
+dim(ocean_meta)
+dim(final_meta)
+
+## Do some renaming of colnames so they match meta-Data_full
+meta <- final_meta %>% rename("oa.mean" = CO2_mean,
+                            "oa.sd" = CO2_sd,
+                            "oa.n" = CO2_n,
+                            "ctrl.mean" = control_mean,
+                            "ctrl.sd" = control_sd,
+                            "ctrl.n" = control_n)
+
+# Reorder col names based on names in meta_data_full
+meta <- meta[names(ocean_meta)]
+
+# Check columns are in same order
+colnames(ocean_meta) == colnames(meta)
+
+# Check columns are in same order
+colnames(ocean_meta) == colnames(meta)
+
+# Bind the two dataframes
+full_final <- rbind(ocean_meta, meta)
+
+```
+
+## Meta-analysis
+### 4. Correctly calculate log response ratio (lnRR) effect size for every row of the dataframe using metafor's escalc() function.
+
+```{r, Zrcalc}
+full_final[1,] # to check how a row looks like
+
+full_final <- metafor::escalc(n1i = oa.n, n2i = ctrl.n, m1i = ctrl.mean, m2i = oa.mean, sd1i = oa.sd, sd2i = ctrl.sd, data = full_final, measure = "ROM")
+# yi: vector to specify the observed effect sizes or outcomes.
+# vi: vector to specify the corresponding sampling variances.
+
+
+# calculating the effect size by one hand of one row to check if i got the correct calculation
+13.2730^2 #176.1725
+72.7890^2 #5298.239
+2.9931^2 #8.958648
+94.1290^2 #8860.269
+
+(176.1725/ (5298.239*46)) + (8.958648/(8860.269*26)) #0.0007617395
+
+# Seems like i did it wrong so retrying the escalc() function calculation 
+full_final <- escalc(n1i = ctrl.n, n2i = oa.n, m1i = ctrl.mean, m2i = oa.mean, sd1i = ctrl.sd, sd2i = oa.sd, data = full_final, measure = "ROM")
+# Found that I had to keep the number, mean and sd of the ctrl in the same '2' and oa in '1'
+
+write_xlsx(full_final, "meta-data_ocean_meta.csv")
+# The meaning of all the columns can be found in the meta-data_ocean_meta.csv file. You only need the meta-data_ocean_meta.csv file to understand what the columns mean, otherwise, you can ignore it.
+```
+
+### 5. Correct meta-analytic model fitted to the data that controls for the sampling variance of lnRR. The model should include a random effect of study and observation. Use metafor's rma.mv() function.
+
+```{r}
+colnames(full_final)[23] = "effect.size"
+colnames(full_final)[24] = "sampling.variance"
+
+full_final <- full_final %>% mutate(residual = 1:n()) # Add this observation level variable.
+
+?rma.mv
+meta_model <- rma.mv(effect.size ~ 1, V = sampling.variance, method = "REML",  dfs ="contain", test="t", random = list(~1|Species, ~1|Study, ~1|residual), data = full_final)
+
+summary(meta_model)
+
+write_xlsx(full_final, "meta-data_ocean_meta.csv")
+# The meaning of all the columns can be found in the meta-data_ocean_meta.csv file. You only need the meta-data_ocean_meta.csv file to understand what the columns mean, otherwise, you can ignore it.
+```
+Firstly, sample variance means whether the the study of the samples are listed/ located close to the expected values. Throughout the sampling variance values, it presents that the distribution ranges in around the e-03 between e+03. The extreme was e-12 which it is likely to be an outsider as it is extremely far away from the mean absolute deviation. 
+
+### 6. Written paragraph of the findings and what they mean which is supported with a figure. The paragraph should include:
+- talk about the ci's 
+
+```{r}
+# Calculate the prediction intervals - for the measures of heterogeneity in effect size estimates across studies
+predict(meta_model)
+# pred - interception also the mean overall across the studies
+
+orchaRd::i2_ml(meta_model, data = full_final)
+# 4.85% states that the heterogeneity of the  study is due to species
+# 5.57% states that the heterogeneity of the study is due to different studies
+# 89.57% states that the heterogeneity of the study is due to residual
+#100% states that the heterogeneity is due to because they all do not relate/ correlate to each other. 
+```
+### Orchard plot (pretty much the same as forest plot) (part of task 6)
+```{r pis, echo=TRUE}
+?orchard_plot
+
+# creating a new rma.mv function for the forest plot
+meta_model1 <- rma.mv(effect.size ~ Life.stage, V = sampling.variance, method = "REML",  dfs ="contain", test="t", random = list(~1|Species, ~1|Study, ~1|residual), data = full_final)
+
+summary(meta_model1)
+
+# Making a forest plot using the orchard method 
+orchaRd::orchard_plot(meta_model1, mod = "Life.stage", group = "Study", data = full_final, xlab = "Acclimation Response Ratio for different life stages", angle = 45)
+# The thin black line is the prediction interval 
+# The thick small black line is the confidence interval
+# Mean estimate is the dot circle on the prediction line. 
+# K = number samples 
+# The numbers in the bracket refers to the number of studies
+
+# Axes are labelled, number of samples and studies plotted on figure
+```
+Figure 1 demonstrates that looking at the forest plot the mean estimate shows that... the 95% confidence interval shows that... While, the prediction interval.
+
+### 7. Funnel plot
+```{r}
+?funnel
+par(oma=c(4,4,4,4))
+
+funnel(x = full_final$effect.size, vi = full_final$sampling.variance, level = c(0.1, 0.05, 0.01), shade = c("white", "gray55", "gray75"), yaxis = "seinv", digits = 2, las = 1, xlab = "Correlation Coefficient (r)", atransf=tanh, legend = TRUE)
+
+# delete the outliers since the yaxis are way to stretched out
+plot(full_final$sampling.variance, full_final$residuals, ylim = c(0.00012, 4))
+
+fun_a <- full_final[-c(17, 16, 497, 255, 564, 6, 562, 220, 673, 163), ]
+
+
+# fun_a <- full_final %>% [which(full_final$sampling.variance, full_final$residuals, ylim = c(0.00012, 4)]
+
+funnel(x = fun_a$effect.size, vi = fun_a$sampling.variance, level = c(0.1, 0.05, 0.01), shade = c("white", "gray55", "gray75"), yaxis = "seinv", digits = 2, las = 1, xlab = "Correlation Coefficient (r)", atransf=tanh, legend = TRUE)
+
+```
+Figure 2, looking as this funnel plot it demonstrates the visualization of the possible publication bias was that it has provided the precision relation, inverse sampling standard error. (Shows the correlation between the variables). It is to visualize the data in relation to the precision, inverse sampling standard error. 
+- The asymmetrical distribution indicates potential publication bias
+
+The shades are not seen probably because there are still quite large numbers of samples and so the shades are not seen. the shades can be seen if zoomed in...  
+
+### 8. Time-lag plot
+```{r}
+colnames(fun_a)[3] = "year.online"
+colnames(fun_a)[4] = "year.print"
+
+# cumulative meta-analysis & mean effect size change test etc 
+ggplot(fun_a, aes(y = effect.size, x = year.online, size = 1/sqrt(sampling.variance))) + geom_point(alpha = 0.3) +
+    geom_smooth(method = lm, col = "red", show.legend = FALSE) + labs(x = "Publication Year",
+    y = "Fisher's Z-transformed Correlation Coefficient (Zr)", size = "Precision (1/SE)") +
+    theme_classic()
+
+
+# Time-lag explains `r r2_time[1]*100`% of the variation in Zr
+```
+Figure 3, the time lag plot assesses how effect sizes may or not have changed through time. Looking at this publication bias is so by converges on the that the average effect size change on the true mean by accumulating more studies. To see if it has exaggerated the effect size compared with the studies that are done in later years.  
+
+### 9. Formal meta-regression model that includes year as a moderator (fixed effect) to test for time-lag bias
+```{r}
+# Including sampling variance and year as moderators to account for both!
+time_bias_meta <- rma.mv(effect.size ~ year.online, V = sampling.variance,
+                    random = list(~1|Species,
+                                  ~1|Study,
+                                  ~1|residual), 
+                    test = "t", dfs = "contain", 
+                    data = fun_a)
+
+# How much variation does time when results were published explain in Zr?
+r2_tb <- orchaRd::r2_ml(time_bias_meta)
+r2_tb
+```
+### 10. Formal meta-regression model that includes inverse sampling variance to test for file-drawer biases
+
+```{r}
+file_drawer_meta <- rma.mv(effect.size ~ year.online + 1/sampling.variance, V = sampling.variance,
+                    random = list(~1|Species,
+                                  ~1|Study,
+                                  ~1|residual), 
+                    test = "t", dfs = "contain", 
+                    data = fun_a)
+
+# How much variation does time when results were published explain in Zr?
+r2_tb <- orchaRd::r2_ml(file_drawer_meta)
+r2_tb 
+```
+
+### 11. A written paragraph that discusses the potential for publication bias based on the meta-regression results. What type of publication bias, if any, appears to be present in the data? If publication bias is present, what does it mean and what might be contributing to such bias?
+
+
+### 12. Identify any studies contributing to publication bias. How do your updated meta-analysis results compare with a meta-analysis by Clement et. al. (2022)? Are there any concerns about these studies? If so, describe using references to existing papers what concerns have been raised?
+5-6 different reef fish that looked at comparing the effect of elevated CO2 (in ppm) relative to some control on fish behaviour - showed no strong evidence that increased acidification had effects on behaviour. (before this project of meta analysing)
+
+
+# ii) Reproducibility
+3.  Rmarkdown documents follow reproducibility principles: Rmarkdown document rendered as an html & Use Figure and Table code chunks that are referenced in text & Writing of findings is done using inline code chunks with reference to specific object values.
+
+(My GitHub Repository)[https://github.com/Han3207/Meta-analysis_OA.git]
+
+### Submit html on the 28th October
+iii) Coding, Writing Structure & Presentation. (20%)
+1.  Code is clearly annotated, clean, and only what is needed is presented
+2.  Figure and Tables have clear and well labelled captions that are informative and correctly referenced within the document.
+3.  Sentences are clear and understandable.
