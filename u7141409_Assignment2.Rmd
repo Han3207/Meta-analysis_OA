@@ -221,6 +221,7 @@ time_bias_meta <- rma.mv(effect.size ~ year.online, V = sampling.variance,
                     test = "t", dfs = "contain", 
                     data = fun_a)
 
+summary(time_bias_meta)
 # How much variation does time when results were published explain in Zr?
 r2_tb <- orchaRd::r2_ml(time_bias_meta)
 r2_tb
@@ -228,12 +229,16 @@ r2_tb
 ### 10. Formal meta-regression model that includes inverse sampling variance to test for file-drawer biases
 
 ```{r}
-file_drawer_meta <- rma.mv(effect.size ~ year.online + 1/sampling.variance, V = sampling.variance,
+# Centering the sampling variance and the year (mean) to account 
+fun_a <- fun_a %>% mutate(Year_center = year.online - mean(year.online)) %>% mutate(sv_center = sampling.variance - mean(sampling.variance))
+
+file_drawer_meta <- rma.mv(effect.size ~ Year_center + 1/sv_center, V = sampling.variance,
                     random = list(~1|Species,
                                   ~1|Study,
                                   ~1|residual), 
                     test = "t", dfs = "contain", 
                     data = fun_a)
+summary(file_drawer_meta)
 
 # How much variation does time when results were published explain in Zr?
 r2_tb <- orchaRd::r2_ml(file_drawer_meta)
@@ -246,11 +251,12 @@ r2_tb
 ### 12. Identify any studies contributing to publication bias. How do your updated meta-analysis results compare with a meta-analysis by Clement et. al. (2022)? Are there any concerns about these studies? If so, describe using references to existing papers what concerns have been raised?
 5-6 different reef fish that looked at comparing the effect of elevated CO2 (in ppm) relative to some control on fish behaviour - showed no strong evidence that increased acidification had effects on behaviour. (before this project of meta analysing)
 
-
 # ii) Reproducibility
 3.  Rmarkdown documents follow reproducibility principles: Rmarkdown document rendered as an html & Use Figure and Table code chunks that are referenced in text & Writing of findings is done using inline code chunks with reference to specific object values.
 
 (My GitHub Repository)[https://github.com/Han3207/Meta-analysis_OA.git]
+
+
 
 ### Submit html on the 28th October
 iii) Coding, Writing Structure & Presentation. (20%)
