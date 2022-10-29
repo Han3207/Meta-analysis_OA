@@ -5,16 +5,20 @@ date: "2022-10-20"
 ---
 
 ## UNI ID: u7141409
+Writing of findings is done using inline code chunks with reference to specific object values. 
+
+Figure and tables have clear and well labelled captions that are informative and correctly referenced within the document 
+
+
 
 use meta-analysis to: - estimate the overall effect of ocean acidification on behaviour and determine if these effects are general across studies conducting similar experiments; - understand how variable the effect size is within the literature - what factors (biological, methodological, publication practices) explain variation in effect size.
 
 # i) Statistical Analysis and Interpretation
-
 ### Downloading packages
 ```{r}
 library(pacman)
 devtools::install_github("daniel1noble/orchaRd", force = TRUE) # Install the orchaRd package
-pacman::p_load(readxl, tidyverse, dplyr, Rcpp, ggforce, png, writexl, flextable, metafor, readr, orchaRd)
+pacman::p_load(readxl, tidyverse, dplyr, Rcpp, ggforce, writexl, flextable, metafor, readr, orchaRd)
 ```
 
 ### 1. Correct analysis of Clark et al. (2020) data (i.e., OA_activitydat_20190302_BIOL3207.csv) to generate the summary statistics (means, SD, N) for each of the fish species’ average activity for each treatment.
@@ -169,11 +173,22 @@ orchaRd::orchard_plot(meta_model1, mod = "Life.stage", group = "Study", data = f
 # The numbers in the bracket refers to the number of studies
 
 # Axes are labelled, number of samples and studies plotted on figure
+
+
+## - Clearly labelled axes 
+
 ```
-Figure 1 demonstrates that looking at the forest plot the mean estimate shows that... the 95% confidence interval shows that... While, the prediction interval.
+```{r, Task 6, echo=TRUE, eval=TRUE, tab.cap = "Overall meta-analysis mean and measure of uncertainty around the mean estimate"}
+
+
+
+```
+The predict() and orchaRd::i2_ml() functions were used to measure the heterogeneity in effect size estimation across the studies. According to the first calculation of the prediction intervals the 95% confidence intervals present that the interception as well as the overall meta-analytic mean across the studies was -0.0612 indicating that there is no correlation. Furthermore, the second calculation states the heterogeneity of the study. The way the I2_Total states 100% presents that all the variables specifically in the species,studies and residuals do not relate or have any significant correlation to each other thus, has high heterogeneity. The I2_Species was about 4.85% stating that the heterogeneity of the study is due to species, 5.57% due to different studies and 89.57% due to residual. 
+
+Instead of the forest plot (Figure 1) the orchard plot was used as it gives similar results (confirmed okay by the lecturer). In this figure 1, the mean estimate (the dot circle that is on the prediction line) across the life stages of the fishes shown to be around very close to the vertical dotted line. In addition looking at the 95% confidence interval the (thick black line) suggests that all of these life stages seem to show… The prediction interval (thin black line) suggests that… For each stage the number of samples are shown as k and the number of studies plotted on figure is in brackets. 
 
 ### 7. Funnel plot
-```{r}
+```{r , echo=FALSE}
 ?funnel
 par(oma=c(4,4,4,4))
 
@@ -183,17 +198,14 @@ funnel(x = full_final$effect.size, vi = full_final$sampling.variance, level = c(
 plot(full_final$sampling.variance, full_final$residuals, ylim = c(0.00012, 4))
 
 fun_a <- full_final[-c(17, 16, 497, 255, 564, 6, 562, 220, 673, 163), ]
+```
 
-
-# fun_a <- full_final %>% [which(full_final$sampling.variance, full_final$residuals, ylim = c(0.00012, 4)]
-
+```{r}
+# Coding to present a funnel plot
 funnel(x = fun_a$effect.size, vi = fun_a$sampling.variance, level = c(0.1, 0.05, 0.01), shade = c("white", "gray55", "gray75"), yaxis = "seinv", digits = 2, las = 1, xlab = "Correlation Coefficient (r)", atransf=tanh, legend = TRUE)
 
 ```
-Figure 2, looking as this funnel plot it demonstrates the visualization of the possible publication bias was that it has provided the precision relation, inverse sampling standard error. (Shows the correlation between the variables). It is to visualize the data in relation to the precision, inverse sampling standard error. 
-- The asymmetrical distribution indicates potential publication bias
-
-The shades are not seen probably because there are still quite large numbers of samples and so the shades are not seen. the shades can be seen if zoomed in...  
+Figure 2: Funnel plot of the effect size sampling variance. This presents the publication bias possibility. Observing the graph, it shows that the vertical linear line is placed at 0. The shades are not seen probably because there are still quite large numbers of samples and so the shades are not seen. the shades can be seen if zoomed in. It is to visualize the correlation between the variables. The way how there is no asymmetrical distribution indicates that there is no potential publication bias. 
 
 ### 8. Time-lag plot
 ```{r}
@@ -209,7 +221,14 @@ ggplot(fun_a, aes(y = effect.size, x = year.online, size = 1/sqrt(sampling.varia
 
 # Time-lag explains `r r2_time[1]*100`% of the variation in Zr
 ```
-Figure 3, the time lag plot assesses how effect sizes may or not have changed through time. Looking at this publication bias is so by converges on the that the average effect size change on the true mean by accumulating more studies. To see if it has exaggerated the effect size compared with the studies that are done in later years.  
+Figure 3: The time-lag plot presents the effect size changes throughout the time. This presents a linear line which was placed along the data where the shaded areas demonstrate the spreadness of the individuals. This provides information that the linear line is a positive slope which indicates the mean effect size increases when the sampling variance is also large. The way there is about equal distribution across the line shows that the expected publication bias as both directions was shown approximately the same. The time lag plot assesses how effect sizes may or not have changed through time. Looking at this publication bias is so that the average effect size changes on the true mean by accumulating more studies. To see if it has exaggerated the effect size compared with the studies that are done in later years. 
+
+Plot of effect size as a function of publication year (online) - this was chosen as the online year was published first than the printed. Points are scaled in relation to their precision inverse sampling variance. Small points indicate effects with low precision or high sampling variance. (That is how it was shown in the html in week 10.) From this plot the key features about this time-lag bias was that it presents a clear positive relationship with year. Also there are earlier year studies that have much higher sampling variance (i.e., low precision), just like we might expect. In addition these early studies appear to have a far higher (Exaggerated) effect size compared with studies that are done in later years. 
+
+There does appear to be a clear negative relationship with year.
+Also of note are that the earlier year studies have much higher sampling variance (i.e., lower precision), just like we might expect.
+These early studies appear to have a far higher (exaggerated) effect size compared with studies that are done in later years.
+
 
 ### 9. Formal meta-regression model that includes year as a moderator (fixed effect) to test for time-lag bias
 ```{r}
@@ -246,20 +265,16 @@ r2_tb
 ```
 
 ### 11. A written paragraph that discusses the potential for publication bias based on the meta-regression results. What type of publication bias, if any, appears to be present in the data? If publication bias is present, what does it mean and what might be contributing to such bias?
+This model (task 9) demonstrates from the variation model it will show the percentage of the effect size. The marginal value was about 0.022 which indicates that the variation of the fixed effects/ moderators explains the model very low. Also, the conditional value was around 0.11 suggesting that they account for both the fixed and random effects of year in effect size. This meta-regression model includes a year as a moderator in the test for time-lag bias shows that there was no expected publication bias.
 
+This meta-regression model  (task 10) including the inverse sampling variance the overall mean correlation value was found. This is because the marginal was 0.02 and the conditional was 0.11 this once again presents a similar result as discussed in the previous task.Suggesting that not of the species and study and residual had no correlation between them. Also it demonstrates how there is no publication bias. The mean effect size decrease indicates that there were more studies and so there is low chance of publication biases. This presents with the evidence for no publication bias as the slope estimate for sampling variance was not significant. For instance there was uncertainty around the estimate with a low set of studies that did not result in the expected correlation to be an average 0.
+
+Thus, coming to conclusion that the data analysis of the different reef fish species having no strong evidence that increased acidification had effects on behaviour this result seems to be accurate as according to this meta-analysis it presents with no/ low publication bias. 
 
 ### 12. Identify any studies contributing to publication bias. How do your updated meta-analysis results compare with a meta-analysis by Clement et. al. (2022)? Are there any concerns about these studies? If so, describe using references to existing papers what concerns have been raised?
-5-6 different reef fish that looked at comparing the effect of elevated CO2 (in ppm) relative to some control on fish behaviour - showed no strong evidence that increased acidification had effects on behaviour. (before this project of meta analysing)
+In the publication bias meta-analysis in the paper 
+The concerns about these studies was that... 
+- 
 
 # ii) Reproducibility
-3.  Rmarkdown documents follow reproducibility principles: Rmarkdown document rendered as an html & Use Figure and Table code chunks that are referenced in text & Writing of findings is done using inline code chunks with reference to specific object values.
-
 (My GitHub Repository)[https://github.com/Han3207/Meta-analysis_OA.git]
-
-
-
-### Submit html on the 28th October
-iii) Coding, Writing Structure & Presentation. (20%)
-1.  Code is clearly annotated, clean, and only what is needed is presented
-2.  Figure and Tables have clear and well labelled captions that are informative and correctly referenced within the document.
-3.  Sentences are clear and understandable.
