@@ -130,7 +130,6 @@ Observing table 2, the way I2 total was 100 suggests that the heterogeneity is d
 
 Furthermore, the second calculation states the heterogeneity of the study. The way the I2_Total states 100% presents that all the variables specifically in the species,studies and residuals do not relate or have any significant correlation to each other thus, has high heterogeneity. The I2_Species was about 4.85% stating that the heterogeneity of the study is due to species, 5.57% due to different studies and 89.57% due to residual. 
 
-
 + This is to prepare for the orchard plot which is similar to the forest plot. 
 ```{r}
 # creating a new rma.mv function for the forest plot
@@ -138,9 +137,8 @@ meta_model1 <- rma.mv(effect.size ~ Life.stage, V = sampling.variance, method = 
 
 summary(meta_model1)
 ```
-
-+ Using the previous meta model into this plot
 ```{r gg-oz-gapminder, Figure 1, fig.cap = ""}
+# Using the previous meta model into this plot
 # Making a forest plot using the orchard method 
 orchaRd::orchard_plot(meta_model1, mod = "Life.stage", group = "Study", data = full_final, xlab = "Acclimation Response Ratio", angle = 45)
 # The thin black line is the prediction interval 
@@ -234,34 +232,13 @@ Thus, coming to conclusion that the data analysis of the different reef fish spe
 
 Thus, this comes to show that the effect of ocean acifification on behaviour the possible publication bias were probability biological, methodological, publication practice factors that explains the variation in effect size. 
 
-### Task 12: Comparation between meta -analysis of the updated and by Clement et al. (2022) about the publication bias
-Are there any concerns about these studies? If so, describe using references to existing papers what concerns have been raised?
+### Task 12: Comparation between meta-analysis of the updated and by Clement et al. (2022) in contribution to publication bias
+describe using references to existing papers what concerns have been raised?
+
+  In the updated meta-analysis the conclusion was that there was no publication bias while the paper did have publication bias. First of all unlike the updated, the paper's meta-analyses the absolute lnRR values were calculated it was found that it was decreasing throughout the period causing the mean effect size to decrease. Also observing the weighted mean effect size magnitudes lnRR across the years, the updated meta-analysis not all data were included to the data, as the outliers of the mean effect size were not included. Thus resulting the flow of the forest plot and the time-lag bias plot to increase.
 
 
-  In contribution to publication bias, the meta-analysis of the updated and Clement et al. (2022) paper was that the same data was used. They both have presented the same conclusion: that there was no publication bias. However, the number of repeats and accumulation of the samples was not conducted in the studies. First of all, both meta-analyses have been represented with the absolute InRR value decreasing throughout the period causing the effect size to drop as in the earlier studies the mean effect size magnitude was disproportionately greater. The similarities was that the flow of effect size was assessed in ocean acidification across the fish where all experiments apart from discluding the outliers across the years showed the trend in mean effect size. However in the updated one the flow increased while it had declined in the clement’s analysis.
-Observing the weighted mean effect size magnitudes InRR by year
-
-  The concerns about these studies was that all possible publication bias was reported such as using the investigator effect, biological factors and more that could have resulted in declining effect size magnitudes.   It was discovered in clement’s paper that the decline effect was on the fish behaviour studies. 
-publication and citation bias - shows positive relationship between effect size magnitude and journal impact factor for year of online publication and mean effect size magnitude for each study. It is important to note here that we did not compute weighted mean effect size magnitudes for each study, but simply computed the mean of the raw effect size magnitudes as calculated in the section. If low sample size was influencing effect sizes among studies in this field, large effect sizes would cluster near the lower end of the sample size spectrum…. We found that the most striking effects of ocean acidification on fish behavior have been published in journals with high impact factors (Fig 4c). In addition, these studies have had a stronger influence (i.e., higher citation frequency) on this field to date than lower-impact studies with weaker effect sizes (Fig 4d and 4e). Similar results have been reported in other areas of ecology and evolution, perhaps most notably in studies regarding terrestrial plant responses to high CO2 
-  Figure 4 suggest that large effect sizes among studies assessing acidification impacts on fish behavior generally have low sample sizes, but tend to be published in high-impact journals and are cited more. Consequently, the one-two punch of low sample sizes and the preference to publish large effects has seemingly led to an incorrect interpretation that ocean acidification will result in broad impacts on fish behavior and thus have wide-ranging ecological consequences—an interpretation that persists in studies published today
-
-  Investigator effects - influencing the decline effect would be apparent if the decline effect was not evident in the dataset excluding these authors. 
-When all papers authored or coauthored by at least one of the lead investigators of those early studies were removed from the dataset (n = 41 studies, 45%), the decline effect was no longer apparent from 2012 to 2019 (Fig 5). While conclusions regarding the potential roles of invalid data await further investigation [31], our results do suggest that investigator or lab group effects have contributed to the decline effect reported here. We suggest that future studies documenting the presence or absence of decline effects—and indeed meta-analyses in general—should carefully consider and evaluate whether investigator effects may be at play in a given field of study.
-
-  All data were initially collected by J.C. Clements and cross-checked by coauthors for accuracy prior to analyses.
-
-  Methodological bias - individual studies, and biases therein, can contribute to the early inflation of effect sizes. Such biases can come in the form of experimental protocols, the chosen experimental design and sample size, and the analytical/statistical approach employed. Experimenter biases can also contribute to inflated effects. Also in the paper 87% of the studies' average mean sample was 30 fishes and was presented with >1.0 mean effect size magnitude while the more than 30 fishes had smaller effect size from about >0.5. This decline effect was selective publication bias about how the stronger effects were often published with greater impact journals. [Figure 3].. 
-  Experimenter/observation bias during data collection is known to seriously skew results in behavioral research [21]. For example, nonblinded observations are common in life sciences, but are known to result in higher reported effect sizes and more significant p-values than blinded observations [22]. Most publications assessing ocean acidification effects on fish behavior, including the initial studies reporting large effect sizes, do not include statements of blinding for behavioral observations. Given that statements of blinding can be misleading [23], there has also been a call for video evidence in animal behavior research [24]. Moreover, the persistence of inflated effects beyond initial studies can be perpetuated by confirmation bias, as follow-up studies attempt to confirm initial inflated effects and capitalize on the receptivity of high-profile journals to new (apparent) phenomena [25]. While our analysis does not empirically demonstrate that experimenter bias contributed to the decline effect, it is possible that conscious and unconscious experimenter biases may have contributed to large effect sizes in this field.
-
-(Describe using references to existing papers what concerns have been raised).
-  The reason why the publication bias result was different was because in the updated data we added the clerk data as well as removing the outlier which could be the reason why there was no publication bias in the updated meta-analysis and yes for clement’s analyses.  For these reasons, selecting the studies with favourable effect size results was the causation of the publication bias. Thus, overall having a different result to the updated meta-analysis as combination of strong, weak and no effect type was about an estimated to have effect type ratio when observing the data.  
-  The individual effect sizes were transformed to the absolute value due to the inherent difficulty in assigning a functional direction to a change in behaviour, as many behavioural changes can be characterised by both positive and negative functional trade-offs. For example, increased activity under elevated pCO2 could make prey fish more difficult for predators to capture, but could also make prey more noticeable to predators. Therefore, rather than prescribing arbitrary functional directionality to altered behaviour, we simply elected to use absolute value (i.e., unsigned value) of lnRR to visualise the decline effect. 
-  Thus, the absolute effect size overestimates and is therefore a conservative estimate of the true effect size, but can still be used to test for declining effect size magnitudes over time (and can thus be used to test for the decline effect). Although this can complicate true population-level inferences, the use of absolute effect size values is informative for understanding the strength of effects ignoring directionality
 
 # ii) Reproducibility
 (My GitHub Repository)[https://github.com/Han3207/Meta-analysis_OA.git]
-
-Use figures and table code chunks that are referenced in text 
-Writing of findings is done using inline code chunks with reference to specific object values. 
-Figure and tables have clear and well labelled captions that are informative and correctly referenced within the document
 
