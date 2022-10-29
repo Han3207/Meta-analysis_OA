@@ -5,24 +5,14 @@ date: "2022-10-20"
 ---
 
 ## UNI ID: u7141409
-Writing of findings is done using inline code chunks with reference to specific object values. 
-
-Figure and tables have clear and well labelled captions that are informative and correctly referenced within the document 
-
-
-
-use meta-analysis to: - estimate the overall effect of ocean acidification on behaviour and determine if these effects are general across studies conducting similar experiments; - understand how variable the effect size is within the literature - what factors (biological, methodological, publication practices) explain variation in effect size.
-
 # i) Statistical Analysis and Interpretation
 ### Downloading packages
 ```{r}
 library(pacman)
 devtools::install_github("daniel1noble/orchaRd", force = TRUE) # Install the orchaRd package
-pacman::p_load(readxl, tidyverse, dplyr, Rcpp, ggforce, writexl, flextable, metafor, readr, orchaRd)
+pacman::p_load(readxl, tidyverse, dplyr, Rcpp, ggforce, flextable, metafor, readr, orchaRd)
 ```
-
-### 1. Correct analysis of Clark et al. (2020) data (i.e., OA_activitydat_20190302_BIOL3207.csv) to generate the summary statistics (means, SD, N) for each of the fish species’ average activity for each treatment.
-
+### Task 1: generating summary statistic for each species average treatment activity
 ```{r}
 # Importing the data as well as signing it to a variable 
 getwd() # to check pathway
@@ -30,10 +20,10 @@ OA_data <- read_csv("C:/ANU study/Year 3 2022/BIOL3207/Assignment2/data/Meta-ana
 
 # Cleaning up the data 
 glimpse(OA_data)
-list(unique(OA_data$species)) # To check spelling errors in species 
+list(unique(OA_data$species)) # To check spelling errors in species
 list(unique(OA_data$treatment)) # To check spelling errors in treatment
 
-# Omitting NA in the data
+# Omitting NA in the data as they are not required for the meta-analysis 
 OA <- (na.omit(OA_data))
 
 # The n for each species 
@@ -49,14 +39,13 @@ OA_sum <- (OA %>%
 
 OA_table <- flextable(OA_sum)
 ```
-
-### 2. Through coding, merge the summary statistics generated from 1) with the metadata (i.e., clark_paper_data.csv) from Clark et al. (2020).
-
+### Task 2: Merge table from task 1 with the metadata
 ```{r}
-getwd()
-clark <- read_csv("C:/ANU study/Year 3 2022/BIOL3207/Assignment2/data/Meta-analysis_OA/clark_paper_data.csv") # This file contains the metadata
+# This file contains the metadata and was imported
+clark <- read_csv("C:/ANU study/Year 3 2022/BIOL3207/Assignment2/data/Meta-analysis_OA/clark_paper_data.csv") 
 
-metadata1 <- cbind(clark, OA_sum) # this function is used to get two data frames and then placed in along together
+# this function is used to get two data frames and then placed in along together
+metadata1 <- cbind(clark, OA_sum) 
 metadata1
 
 # Making a final metadata  for each treatment as it was instructed in task 1. 
@@ -65,47 +54,35 @@ final_meta <- pivot_wider(metadata1, names_from = treatment, names_glue = "{trea
 final_meta
 ```
 
-### 3. Through coding, correctly merge the combined summary statistics and metadata from Clark et al. (2020) (output from 1 & 2) into the larger meta-analysis dataset (i.e., ocean_meta_data.csv).
-
+### Task 3: Merge the output from 2 into larger meta-analysis dataset
 ```{r}
-getwd()
+# This large meta-analsis dataset was imported
 ocean_meta <- read_csv("C:/ANU study/Year 3 2022/BIOL3207/Assignment2/data/Meta-analysis_OA/ocean_meta_data.csv")
 
+# This was coded to quickly observe whether the colnames were the same/ matched
 dim(ocean_meta)
 dim(final_meta)
 
-## Do some renaming of colnames so they match meta-Data_full
-meta <- final_meta %>% rename("oa.mean" = CO2_mean,
-                            "oa.sd" = CO2_sd,
-                            "oa.n" = CO2_n,
-                            "ctrl.mean" = control_mean,
-                            "ctrl.sd" = control_sd,
-                            "ctrl.n" = control_n)
-
+## Do some renaming of colnames so they match "meta" data variable
+meta <- final_meta %>% rename("oa.sd" = CO2_sd, "oa.mean" = CO2_mean, "oa.n" = CO2_n,"ctrl.sd" = control_sd,"ctrl.n" = control_n, "ctrl.mean" = control_mean)
+                            
 # Reorder col names based on names in meta_data_full
 meta <- meta[names(ocean_meta)]
 
 # Check columns are in same order
 colnames(ocean_meta) == colnames(meta)
 
-# Check columns are in same order
-colnames(ocean_meta) == colnames(meta)
-
 # Bind the two dataframes
 full_final <- rbind(ocean_meta, meta)
-
 ```
 
-## Meta-analysis
-### 4. Correctly calculate log response ratio (lnRR) effect size for every row of the dataframe using metafor's escalc() function.
-
-```{r, Zrcalc}
+### Task 4: Calculate lnRR effect size for every row of the dataframe
+```{r}
 full_final[1,] # to check how a row looks like
 
 full_final <- metafor::escalc(n1i = oa.n, n2i = ctrl.n, m1i = ctrl.mean, m2i = oa.mean, sd1i = oa.sd, sd2i = ctrl.sd, data = full_final, measure = "ROM")
-# yi: vector to specify the observed effect sizes or outcomes.
-# vi: vector to specify the corresponding sampling variances.
-
+# yi: observed effect sizes
+# vi: sampling variances
 
 # calculating the effect size by one hand of one row to check if i got the correct calculation
 13.2730^2 #176.1725
@@ -118,97 +95,82 @@ full_final <- metafor::escalc(n1i = oa.n, n2i = ctrl.n, m1i = ctrl.mean, m2i = o
 # Seems like i did it wrong so retrying the escalc() function calculation 
 full_final <- escalc(n1i = ctrl.n, n2i = oa.n, m1i = ctrl.mean, m2i = oa.mean, sd1i = ctrl.sd, sd2i = oa.sd, data = full_final, measure = "ROM")
 # Found that I had to keep the number, mean and sd of the ctrl in the same '2' and oa in '1'
-
-write_xlsx(full_final, "meta-data_ocean_meta.csv")
-# The meaning of all the columns can be found in the meta-data_ocean_meta.csv file. You only need the meta-data_ocean_meta.csv file to understand what the columns mean, otherwise, you can ignore it.
 ```
 
-### 5. Correct meta-analytic model fitted to the data that controls for the sampling variance of lnRR. The model should include a random effect of study and observation. Use metafor's rma.mv() function.
-
+### Task 5: Meta-analytic model for sampling variance of lnRR - including random effect of study and obervation
 ```{r}
-colnames(full_final)[23] = "effect.size"
+# These two following coding was to change the name to less complicated
+colnames(full_final)[23] = "effect.size" 
 colnames(full_final)[24] = "sampling.variance"
 
-full_final <- full_final %>% mutate(residual = 1:n()) # Add this observation level variable.
+# Add this observation level variable which will be called residual
+full_final <- full_final %>% mutate(residual = 1:n()) 
 
-?rma.mv
 meta_model <- rma.mv(effect.size ~ 1, V = sampling.variance, method = "REML",  dfs ="contain", test="t", random = list(~1|Species, ~1|Study, ~1|residual), data = full_final)
+# In this rma.va function it was effect size to 1 as a control for the "V = sampling variance". In addition, the method was REML as we wanted to calculate the lnRR meta-analytic model. The random list firstly it was Species as all species could differ and the study and residual was also added as instructed from the task. 
 
-summary(meta_model)
-
-write_xlsx(full_final, "meta-data_ocean_meta.csv")
-# The meaning of all the columns can be found in the meta-data_ocean_meta.csv file. You only need the meta-data_ocean_meta.csv file to understand what the columns mean, otherwise, you can ignore it.
+summary(meta_model) # From using the summary function it will present the mulivariate Meta-Analysis Model.
 ```
 Firstly, sample variance means whether the the study of the samples are listed/ located close to the expected values. Throughout the sampling variance values, it presents that the distribution ranges in around the e-03 between e+03. The extreme was e-12 which it is likely to be an outsider as it is extremely far away from the mean absolute deviation. 
 
-### 6. Written paragraph of the findings and what they mean which is supported with a figure. The paragraph should include:
-- talk about the ci's 
-
-```{r}
-# Calculate the prediction intervals - for the measures of heterogeneity in effect size estimates across studies
+### Task 6: Findings and its meanings supported with figures
+```{r, table 1}
 predict(meta_model)
-# pred - interception also the mean overall across the studies
-
-orchaRd::i2_ml(meta_model, data = full_final)
-# 4.85% states that the heterogeneity of the  study is due to species
-# 5.57% states that the heterogeneity of the study is due to different studies
-# 89.57% states that the heterogeneity of the study is due to residual
-#100% states that the heterogeneity is due to because they all do not relate/ correlate to each other. 
+# This function was used to calculate the confidence intervals and prediction intervals.
 ```
-### Orchard plot (pretty much the same as forest plot) (part of task 6)
-```{r pis, echo=TRUE}
-?orchard_plot
+Observing the confidence interval values it suggests that the uncertainty in a sample variable is low. This suggests that the data represents pretty accurate and reliable data of the population. Also, the small ci value demonstrates the likelyhood of getting the similar result. The way pred value is -0.0612 indicates the mean overall across the studies had negative interception. 
 
+Furthermore, the pi (prediction interval) values presents the heterogeneity in effect size estimation across the studies.
+
+```{r, table 2}
+# This is another coding method to calculate/ measure the heterogeneity
+orchaRd::i2_ml(meta_model, data = full_final)
+``` 
+Observing table 2, the way I2 total was 100 suggests that the heterogeneity is due to because they all do not relate/ correlate to each other. 89.57% states that the heterogeneity of the study is due to residual. 5.57% states that the heterogeneity of the study is due to different studies. 4.85% states that the heterogeneity of the study is due to species
+
+Furthermore, the second calculation states the heterogeneity of the study. The way the I2_Total states 100% presents that all the variables specifically in the species,studies and residuals do not relate or have any significant correlation to each other thus, has high heterogeneity. The I2_Species was about 4.85% stating that the heterogeneity of the study is due to species, 5.57% due to different studies and 89.57% due to residual. 
+
+
++ This is to prepare for the orchard plot which is similar to the forest plot. 
+```{r}
 # creating a new rma.mv function for the forest plot
 meta_model1 <- rma.mv(effect.size ~ Life.stage, V = sampling.variance, method = "REML",  dfs ="contain", test="t", random = list(~1|Species, ~1|Study, ~1|residual), data = full_final)
 
 summary(meta_model1)
+```
 
++ Using the previous meta model into this plot
+```{r gg-oz-gapminder, Figure 1, fig.cap = ""}
 # Making a forest plot using the orchard method 
-orchaRd::orchard_plot(meta_model1, mod = "Life.stage", group = "Study", data = full_final, xlab = "Acclimation Response Ratio for different life stages", angle = 45)
+orchaRd::orchard_plot(meta_model1, mod = "Life.stage", group = "Study", data = full_final, xlab = "Acclimation Response Ratio", angle = 45)
 # The thin black line is the prediction interval 
 # The thick small black line is the confidence interval
 # Mean estimate is the dot circle on the prediction line. 
 # K = number samples 
 # The numbers in the bracket refers to the number of studies
-
-# Axes are labelled, number of samples and studies plotted on figure
-
-
-## - Clearly labelled axes 
-
-```
-```{r, Task 6, echo=TRUE, eval=TRUE, tab.cap = "Overall meta-analysis mean and measure of uncertainty around the mean estimate"}
-
-
-
 ```
 The predict() and orchaRd::i2_ml() functions were used to measure the heterogeneity in effect size estimation across the studies. According to the first calculation of the prediction intervals the 95% confidence intervals present that the interception as well as the overall meta-analytic mean across the studies was -0.0612 indicating that there is no correlation. Furthermore, the second calculation states the heterogeneity of the study. The way the I2_Total states 100% presents that all the variables specifically in the species,studies and residuals do not relate or have any significant correlation to each other thus, has high heterogeneity. The I2_Species was about 4.85% stating that the heterogeneity of the study is due to species, 5.57% due to different studies and 89.57% due to residual. 
 
-Instead of the forest plot (Figure 1) the orchard plot was used as it gives similar results (confirmed okay by the lecturer). In this figure 1, the mean estimate (the dot circle that is on the prediction line) across the life stages of the fishes shown to be around very close to the vertical dotted line. In addition looking at the 95% confidence interval the (thick black line) suggests that all of these life stages seem to show… The prediction interval (thin black line) suggests that… For each stage the number of samples are shown as k and the number of studies plotted on figure is in brackets. 
+Instead of the forest plot (Figure 1) the orchard plot was used as it gives similar results (confirmed okay by the lecturer). In this figure 1, the mean estimate (the dot circle that is on the prediction line) across the life stages of the fishes shown to be around very close to the vertical dotted line. In addition looking at the 95% confidence interval the (thick black line) suggests that all of these life stages seem to show… The prediction interval (thin black line) suggests that… For each stage the number of samples are shown as k and the number of studies plotted on figure is in brackets.
 
-### 7. Funnel plot
-```{r , echo=FALSE}
-?funnel
-par(oma=c(4,4,4,4))
-
+### Task 7: Funnel plot
+```{r}
 funnel(x = full_final$effect.size, vi = full_final$sampling.variance, level = c(0.1, 0.05, 0.01), shade = c("white", "gray55", "gray75"), yaxis = "seinv", digits = 2, las = 1, xlab = "Correlation Coefficient (r)", atransf=tanh, legend = TRUE)
+# This coding was learnt in the previous lectures/ workshop 
 
 # delete the outliers since the yaxis are way to stretched out
 plot(full_final$sampling.variance, full_final$residuals, ylim = c(0.00012, 4))
 
-fun_a <- full_final[-c(17, 16, 497, 255, 564, 6, 562, 220, 673, 163), ]
+fun_a <- full_final[-c(17, 16, 497, 255, 564, 6, 562, 220, 673, 163), ] # This is specifically looking at the data and cutting the outliers. 
 ```
-
-```{r}
+```{r gg-oz-gapminder, Figure 2, fig.cap = ""}
 # Coding to present a funnel plot
 funnel(x = fun_a$effect.size, vi = fun_a$sampling.variance, level = c(0.1, 0.05, 0.01), shade = c("white", "gray55", "gray75"), yaxis = "seinv", digits = 2, las = 1, xlab = "Correlation Coefficient (r)", atransf=tanh, legend = TRUE)
-
 ```
-Figure 2: Funnel plot of the effect size sampling variance. This presents the publication bias possibility. Observing the graph, it shows that the vertical linear line is placed at 0. The shades are not seen probably because there are still quite large numbers of samples and so the shades are not seen. the shades can be seen if zoomed in. It is to visualize the correlation between the variables. The way how there is no asymmetrical distribution indicates that there is no potential publication bias. 
+Funnel plot (Figure 2) of the effect size sampling variance. This presents the publication bias possibility. Observing the graph, it shows that the vertical linear line is placed at 0. The shades are not seen probably because there are still quite large numbers of samples and so the shades are not seen. the shades can be seen if zoomed in. It is to visualize the correlation between the variables. The way how there is no asymmetrical distribution indicates that there is no potential publication bias.
 
-### 8. Time-lag plot
-```{r}
+### Task 8: Time-lag plot
+```{r gg-oz-gapminder, Figure 3, fig.cap = ""}
 colnames(fun_a)[3] = "year.online"
 colnames(fun_a)[4] = "year.print"
 
@@ -229,8 +191,7 @@ There does appear to be a clear negative relationship with year.
 Also of note are that the earlier year studies have much higher sampling variance (i.e., lower precision), just like we might expect.
 These early studies appear to have a far higher (exaggerated) effect size compared with studies that are done in later years.
 
-
-### 9. Formal meta-regression model that includes year as a moderator (fixed effect) to test for time-lag bias
+### Task 9: Formal meta-regression model that includes year as a moderator (fixed effect) to test for time-lag bias
 ```{r}
 # Including sampling variance and year as moderators to account for both!
 time_bias_meta <- rma.mv(effect.size ~ year.online, V = sampling.variance,
@@ -240,12 +201,11 @@ time_bias_meta <- rma.mv(effect.size ~ year.online, V = sampling.variance,
                     test = "t", dfs = "contain", 
                     data = fun_a)
 
-summary(time_bias_meta)
 # How much variation does time when results were published explain in Zr?
 r2_tb <- orchaRd::r2_ml(time_bias_meta)
 r2_tb
 ```
-### 10. Formal meta-regression model that includes inverse sampling variance to test for file-drawer biases
+### Task 10: Formal meta-regression model that includes inverse sampling variance to test for file-drawer biases
 
 ```{r}
 # Centering the sampling variance and the year (mean) to account 
@@ -257,24 +217,51 @@ file_drawer_meta <- rma.mv(effect.size ~ Year_center + 1/sv_center, V = sampling
                                   ~1|residual), 
                     test = "t", dfs = "contain", 
                     data = fun_a)
-summary(file_drawer_meta)
 
 # How much variation does time when results were published explain in Zr?
 r2_tb <- orchaRd::r2_ml(file_drawer_meta)
 r2_tb 
 ```
 
-### 11. A written paragraph that discusses the potential for publication bias based on the meta-regression results. What type of publication bias, if any, appears to be present in the data? If publication bias is present, what does it mean and what might be contributing to such bias?
+### Task 11: Potential publication bias based on meta-regression results. 
+What type of publication bias, if any, appears to be present in the data? If present, what does it mean and what might be contributing to such bias?
+
 This model (task 9) demonstrates from the variation model it will show the percentage of the effect size. The marginal value was about 0.022 which indicates that the variation of the fixed effects/ moderators explains the model very low. Also, the conditional value was around 0.11 suggesting that they account for both the fixed and random effects of year in effect size. This meta-regression model includes a year as a moderator in the test for time-lag bias shows that there was no expected publication bias.
 
 This meta-regression model  (task 10) including the inverse sampling variance the overall mean correlation value was found. This is because the marginal was 0.02 and the conditional was 0.11 this once again presents a similar result as discussed in the previous task.Suggesting that not of the species and study and residual had no correlation between them. Also it demonstrates how there is no publication bias. The mean effect size decrease indicates that there were more studies and so there is low chance of publication biases. This presents with the evidence for no publication bias as the slope estimate for sampling variance was not significant. For instance there was uncertainty around the estimate with a low set of studies that did not result in the expected correlation to be an average 0.
 
 Thus, coming to conclusion that the data analysis of the different reef fish species having no strong evidence that increased acidification had effects on behaviour this result seems to be accurate as according to this meta-analysis it presents with no/ low publication bias. 
 
-### 12. Identify any studies contributing to publication bias. How do your updated meta-analysis results compare with a meta-analysis by Clement et. al. (2022)? Are there any concerns about these studies? If so, describe using references to existing papers what concerns have been raised?
-In the publication bias meta-analysis in the paper 
-The concerns about these studies was that... 
-- 
+Thus, this comes to show that the effect of ocean acifification on behaviour the possible publication bias were probability biological, methodological, publication practice factors that explains the variation in effect size. 
+
+### Task 12: Comparation between meta -analysis of the updated and by Clement et al. (2022) about the publication bias
+Are there any concerns about these studies? If so, describe using references to existing papers what concerns have been raised?
+
+
+  In contribution to publication bias, the meta-analysis of the updated and Clement et al. (2022) paper was that the same data was used. They both have presented the same conclusion: that there was no publication bias. However, the number of repeats and accumulation of the samples was not conducted in the studies. First of all, both meta-analyses have been represented with the absolute InRR value decreasing throughout the period causing the effect size to drop as in the earlier studies the mean effect size magnitude was disproportionately greater. The similarities was that the flow of effect size was assessed in ocean acidification across the fish where all experiments apart from discluding the outliers across the years showed the trend in mean effect size. However in the updated one the flow increased while it had declined in the clement’s analysis.
+Observing the weighted mean effect size magnitudes InRR by year
+
+  The concerns about these studies was that all possible publication bias was reported such as using the investigator effect, biological factors and more that could have resulted in declining effect size magnitudes.   It was discovered in clement’s paper that the decline effect was on the fish behaviour studies. 
+publication and citation bias - shows positive relationship between effect size magnitude and journal impact factor for year of online publication and mean effect size magnitude for each study. It is important to note here that we did not compute weighted mean effect size magnitudes for each study, but simply computed the mean of the raw effect size magnitudes as calculated in the section. If low sample size was influencing effect sizes among studies in this field, large effect sizes would cluster near the lower end of the sample size spectrum…. We found that the most striking effects of ocean acidification on fish behavior have been published in journals with high impact factors (Fig 4c). In addition, these studies have had a stronger influence (i.e., higher citation frequency) on this field to date than lower-impact studies with weaker effect sizes (Fig 4d and 4e). Similar results have been reported in other areas of ecology and evolution, perhaps most notably in studies regarding terrestrial plant responses to high CO2 
+  Figure 4 suggest that large effect sizes among studies assessing acidification impacts on fish behavior generally have low sample sizes, but tend to be published in high-impact journals and are cited more. Consequently, the one-two punch of low sample sizes and the preference to publish large effects has seemingly led to an incorrect interpretation that ocean acidification will result in broad impacts on fish behavior and thus have wide-ranging ecological consequences—an interpretation that persists in studies published today
+
+  Investigator effects - influencing the decline effect would be apparent if the decline effect was not evident in the dataset excluding these authors. 
+When all papers authored or coauthored by at least one of the lead investigators of those early studies were removed from the dataset (n = 41 studies, 45%), the decline effect was no longer apparent from 2012 to 2019 (Fig 5). While conclusions regarding the potential roles of invalid data await further investigation [31], our results do suggest that investigator or lab group effects have contributed to the decline effect reported here. We suggest that future studies documenting the presence or absence of decline effects—and indeed meta-analyses in general—should carefully consider and evaluate whether investigator effects may be at play in a given field of study.
+
+  All data were initially collected by J.C. Clements and cross-checked by coauthors for accuracy prior to analyses.
+
+  Methodological bias - individual studies, and biases therein, can contribute to the early inflation of effect sizes. Such biases can come in the form of experimental protocols, the chosen experimental design and sample size, and the analytical/statistical approach employed. Experimenter biases can also contribute to inflated effects. Also in the paper 87% of the studies' average mean sample was 30 fishes and was presented with >1.0 mean effect size magnitude while the more than 30 fishes had smaller effect size from about >0.5. This decline effect was selective publication bias about how the stronger effects were often published with greater impact journals. [Figure 3].. 
+  Experimenter/observation bias during data collection is known to seriously skew results in behavioral research [21]. For example, nonblinded observations are common in life sciences, but are known to result in higher reported effect sizes and more significant p-values than blinded observations [22]. Most publications assessing ocean acidification effects on fish behavior, including the initial studies reporting large effect sizes, do not include statements of blinding for behavioral observations. Given that statements of blinding can be misleading [23], there has also been a call for video evidence in animal behavior research [24]. Moreover, the persistence of inflated effects beyond initial studies can be perpetuated by confirmation bias, as follow-up studies attempt to confirm initial inflated effects and capitalize on the receptivity of high-profile journals to new (apparent) phenomena [25]. While our analysis does not empirically demonstrate that experimenter bias contributed to the decline effect, it is possible that conscious and unconscious experimenter biases may have contributed to large effect sizes in this field.
+
+(Describe using references to existing papers what concerns have been raised).
+  The reason why the publication bias result was different was because in the updated data we added the clerk data as well as removing the outlier which could be the reason why there was no publication bias in the updated meta-analysis and yes for clement’s analyses.  For these reasons, selecting the studies with favourable effect size results was the causation of the publication bias. Thus, overall having a different result to the updated meta-analysis as combination of strong, weak and no effect type was about an estimated to have effect type ratio when observing the data.  
+  The individual effect sizes were transformed to the absolute value due to the inherent difficulty in assigning a functional direction to a change in behaviour, as many behavioural changes can be characterised by both positive and negative functional trade-offs. For example, increased activity under elevated pCO2 could make prey fish more difficult for predators to capture, but could also make prey more noticeable to predators. Therefore, rather than prescribing arbitrary functional directionality to altered behaviour, we simply elected to use absolute value (i.e., unsigned value) of lnRR to visualise the decline effect. 
+  Thus, the absolute effect size overestimates and is therefore a conservative estimate of the true effect size, but can still be used to test for declining effect size magnitudes over time (and can thus be used to test for the decline effect). Although this can complicate true population-level inferences, the use of absolute effect size values is informative for understanding the strength of effects ignoring directionality
 
 # ii) Reproducibility
 (My GitHub Repository)[https://github.com/Han3207/Meta-analysis_OA.git]
+
+Use figures and table code chunks that are referenced in text 
+Writing of findings is done using inline code chunks with reference to specific object values. 
+Figure and tables have clear and well labelled captions that are informative and correctly referenced within the document
+
