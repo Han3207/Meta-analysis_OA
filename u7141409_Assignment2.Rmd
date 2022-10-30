@@ -111,7 +111,7 @@ meta_model <- rma.mv(effect.size ~ 1, V = sampling.variance, method = "REML",  d
 
 summary(meta_model) # From using the summary function it will present the mulivariate Meta-Analysis Model.
 ```
-Firstly, sample variance means whether the the study of the samples are listed/ located close to the expected values. Throughout the sampling variance values, it presents that the distribution ranges in around the e-03 between e+03. The extreme was e-12 which it is likely to be an outsider as it is extremely far away from the mean absolute deviation. 
+Firstly, sample variance means whether the the study of the samples are listed/ located close to the expected values. Throughout the sampling variance values, it presents that the distribution ranges in around the e-03 between e+03. The extreme was e-12 which is likely to be an outsider as it is extremely far away from the mean absolute deviation. 
 
 ### Task 6: Findings and its meanings supported with figures
 ```{r, table 1}
@@ -126,18 +126,15 @@ Furthermore, the pi (prediction interval) values presents the heterogeneity in e
 # This is another coding method to calculate/ measure the heterogeneity
 orchaRd::i2_ml(meta_model, data = full_final)
 ``` 
-Observing table 2, the way I2 total was 100 suggests that the heterogeneity is due to because they all do not relate/ correlate to each other. 89.57% states that the heterogeneity of the study is due to residual. 5.57% states that the heterogeneity of the study is due to different studies. 4.85% states that the heterogeneity of the study is due to species
 
-Furthermore, the second calculation states the heterogeneity of the study. The way the I2_Total states 100% presents that all the variables specifically in the species,studies and residuals do not relate or have any significant correlation to each other thus, has high heterogeneity. The I2_Species was about 4.85% stating that the heterogeneity of the study is due to species, 5.57% due to different studies and 89.57% due to residual. 
-
-+ This is to prepare for the orchard plot which is similar to the forest plot. 
 ```{r}
 # creating a new rma.mv function for the forest plot
 meta_model1 <- rma.mv(effect.size ~ Life.stage, V = sampling.variance, method = "REML",  dfs ="contain", test="t", random = list(~1|Species, ~1|Study, ~1|residual), data = full_final)
 
 summary(meta_model1)
 ```
-```{r gg-oz-gapminder, Figure 1, fig.cap = ""}
+```{r gg-oz-gapminder, Figure 1, fig.cap = "Figure 1. The accumulation response ratio across the different life stages, shows the mean estimates (the circle) are located very close to the vertical dotted line at 0. The thick black line represents the 95% confidence interval and with the longer thin black line that represents the prediction interval. For each stage of the number of samples (k) and the number of studies that the samples were obtained were in brackets. The life stages in larvae are in yellow, Juvenile were in red, adults were in blue and the unknown/ not recorded were in green."}
+
 # Using the previous meta model into this plot
 # Making a forest plot using the orchard method 
 orchaRd::orchard_plot(meta_model1, mod = "Life.stage", group = "Study", data = full_final, xlab = "Acclimation Response Ratio", angle = 45)
@@ -147,9 +144,12 @@ orchaRd::orchard_plot(meta_model1, mod = "Life.stage", group = "Study", data = f
 # K = number samples 
 # The numbers in the bracket refers to the number of studies
 ```
-The predict() and orchaRd::i2_ml() functions were used to measure the heterogeneity in effect size estimation across the studies. According to the first calculation of the prediction intervals the 95% confidence intervals present that the interception as well as the overall meta-analytic mean across the studies was -0.0612 indicating that there is no correlation. Furthermore, the second calculation states the heterogeneity of the study. The way the I2_Total states 100% presents that all the variables specifically in the species,studies and residuals do not relate or have any significant correlation to each other thus, has high heterogeneity. The I2_Species was about 4.85% stating that the heterogeneity of the study is due to species, 5.57% due to different studies and 89.57% due to residual. 
+  According to the first calculation of the prediction intervals, the 95% confidence intervals present the interception. Observing the confidence interval values suggests that the uncertainty in a sample variable is low. This suggests that the data represents pretty accurate and reliable data of the population. As well as the overall meta-analytic mean across the studies was -0.0612 indicating that there is no correlation showing negative interception across the studies. Furthermore, the pi (prediction interval) values present heterogeneity in effect size estimation across the studies. The se value was 0.1228 indicating that the sample mean is accurate and reliable representing the for its population, as the se value is small. The confidence intervals were from -0.3067 to 0.1844 suggesting that the possible range around the estimate to be stable - the population mean. The prediction interval is from -4.2515 to 4.1292 the range a future individual observation will fall, the uncertainty of single observation whether it will be within the distribution of the population. 
 
-Instead of the forest plot (Figure 1) the orchard plot was used as it gives similar results (confirmed okay by the lecturer). In this figure 1, the mean estimate (the dot circle that is on the prediction line) across the life stages of the fishes shown to be around very close to the vertical dotted line. In addition looking at the 95% confidence interval the (thick black line) suggests that all of these life stages seem to show… The prediction interval (thin black line) suggests that… For each stage the number of samples are shown as k and the number of studies plotted on figure is in brackets.
+  Observing table 2, the second calculation states the heterogeneity of the study. The way the I2_Total states 100% presents that all the variables specifically in the species,studies and residuals do not relate or have any significant correlation to each other thus, has high heterogeneity. The I2_Species was about 4.85% stating that the heterogeneity of the study is due to species, 5.57% due to different studies and 89.57% due to residual.
+
+  The multivariate meta-analysis model above there were 801 samples involved in this analysis. The test for residual heterogeneity presents that the p value < 0.001 was low indicating that it was significant that the studies were not equal and that the diversity between the variables was detected. The p value for the moderators was 0.3758 suggests that the interactions between the moderating variables.         
+  Instead of the forest plot the orchard plot (Figure 1) was used as it gives similar results (confirmed okay by the lecturer). This plot presents that the variables between the life stages across the fishes had no significant interaction in impacting the effect size. This is because the larvae, juvenile and adults were located approximately very similar and close to 0 presents that the stages does not matter. In addition, the not provided was included as although we do not know what stage but it shows that across the stages the measurements and values were the same. 
 
 ### Task 7: Funnel plot
 ```{r}
@@ -161,14 +161,14 @@ plot(full_final$sampling.variance, full_final$residuals, ylim = c(0.00012, 4))
 
 fun_a <- full_final[-c(17, 16, 497, 255, 564, 6, 562, 220, 673, 163), ] # This is specifically looking at the data and cutting the outliers. 
 ```
-```{r gg-oz-gapminder, Figure 2, fig.cap = ""}
+```{r gg-oz-gapminder, Figure 2, fig.cap = "Figure 2. The publication bias of the effect size to the sampling variance across the studies, shows the vertical line at 0 where the shades indicate the p values of the studies."}
 # Coding to present a funnel plot
 funnel(x = fun_a$effect.size, vi = fun_a$sampling.variance, level = c(0.1, 0.05, 0.01), shade = c("white", "gray55", "gray75"), yaxis = "seinv", digits = 2, las = 1, xlab = "Correlation Coefficient (r)", atransf=tanh, legend = TRUE)
 ```
-Funnel plot (Figure 2) of the effect size sampling variance. This presents the publication bias possibility. Observing the graph, it shows that the vertical linear line is placed at 0. The shades are not seen probably because there are still quite large numbers of samples and so the shades are not seen. the shades can be seen if zoomed in. It is to visualize the correlation between the variables. The way how there is no asymmetrical distribution indicates that there is no potential publication bias.
+  Funnel plot (Figure 2) of the effect size sampling variance. This presents the publication bias possibility. The studies (the dots) are approximately evenly distributed (symmetrical) across the vertical line and across the graph. The reason why no other shaded colours can be observed could be because of too many samples/ large numbers of samples used to analyse. It is expected that the shades can be viewed if the plot was zoomed in. Therefore, no potential publication bias. 
 
 ### Task 8: Time-lag plot
-```{r gg-oz-gapminder, Figure 3, fig.cap = ""}
+```{r gg-oz-gapminder, Figure 3, fig.cap = "Figure 3. The time-lag plot of the inverse sampling variance across the year, shows the effect size throughout the time. The red linear line is placed along the data of the shaded circles demonstrating the spreadness of the sample studies. "}
 colnames(fun_a)[3] = "year.online"
 colnames(fun_a)[4] = "year.print"
 
@@ -181,13 +181,7 @@ ggplot(fun_a, aes(y = effect.size, x = year.online, size = 1/sqrt(sampling.varia
 
 # Time-lag explains `r r2_time[1]*100`% of the variation in Zr
 ```
-Figure 3: The time-lag plot presents the effect size changes throughout the time. This presents a linear line which was placed along the data where the shaded areas demonstrate the spreadness of the individuals. This provides information that the linear line is a positive slope which indicates the mean effect size increases when the sampling variance is also large. The way there is about equal distribution across the line shows that the expected publication bias as both directions was shown approximately the same. The time lag plot assesses how effect sizes may or not have changed through time. Looking at this publication bias is so that the average effect size changes on the true mean by accumulating more studies. To see if it has exaggerated the effect size compared with the studies that are done in later years. 
-
-Plot of effect size as a function of publication year (online) - this was chosen as the online year was published first than the printed. Points are scaled in relation to their precision inverse sampling variance. Small points indicate effects with low precision or high sampling variance. (That is how it was shown in the html in week 10.) From this plot the key features about this time-lag bias was that it presents a clear positive relationship with year. Also there are earlier year studies that have much higher sampling variance (i.e., low precision), just like we might expect. In addition these early studies appear to have a far higher (Exaggerated) effect size compared with studies that are done in later years. 
-
-There does appear to be a clear negative relationship with year.
-Also of note are that the earlier year studies have much higher sampling variance (i.e., lower precision), just like we might expect.
-These early studies appear to have a far higher (exaggerated) effect size compared with studies that are done in later years.
+  Figure 3 demonstrates the positive slope of the red line suggesting that the mean effect size throughout the year has been slightly increasing (clear relationship with the year). The slope estimate for sampling variance was not significant explaining that there is no publication bias. Not only, but with about equal spread across the line indicates that there is no expected publication bias as each circle was not skewed to a side. This also presents the effect size of the studies compared across the years. The year (online) was chosen since it was published earlier than the printed year date. The smaller precision indicates greater sampling variance which were detected between -5 and 5 of the Fisher’s Z-transformed correlation coefficient which shows that the sample variation is normally distributed.
 
 ### Task 9: Formal meta-regression model that includes year as a moderator (fixed effect) to test for time-lag bias
 ```{r}
@@ -220,22 +214,11 @@ file_drawer_meta <- rma.mv(effect.size ~ Year_center + 1/sv_center, V = sampling
 r2_tb <- orchaRd::r2_ml(file_drawer_meta)
 r2_tb 
 ```
-
 ### Task 11: Potential publication bias based on meta-regression results. 
-What type of publication bias, if any, appears to be present in the data? If present, what does it mean and what might be contributing to such bias?
-
-This model (task 9) demonstrates from the variation model it will show the percentage of the effect size. The marginal value was about 0.022 which indicates that the variation of the fixed effects/ moderators explains the model very low. Also, the conditional value was around 0.11 suggesting that they account for both the fixed and random effects of year in effect size. This meta-regression model includes a year as a moderator in the test for time-lag bias shows that there was no expected publication bias.
-
-This meta-regression model  (task 10) including the inverse sampling variance the overall mean correlation value was found. This is because the marginal was 0.02 and the conditional was 0.11 this once again presents a similar result as discussed in the previous task.Suggesting that not of the species and study and residual had no correlation between them. Also it demonstrates how there is no publication bias. The mean effect size decrease indicates that there were more studies and so there is low chance of publication biases. This presents with the evidence for no publication bias as the slope estimate for sampling variance was not significant. For instance there was uncertainty around the estimate with a low set of studies that did not result in the expected correlation to be an average 0.
-
-Thus, coming to conclusion that the data analysis of the different reef fish species having no strong evidence that increased acidification had effects on behaviour this result seems to be accurate as according to this meta-analysis it presents with no/ low publication bias. 
-
-Thus, this comes to show that the effect of ocean acifification on behaviour the possible publication bias were probability biological, methodological, publication practice factors that explains the variation in effect size. 
+  Both of the meta-regression models from task 9 and 10, have given the  similar/ same value as the R2 marginal was 0.022 and R2 conditional 0.11. According to this value, the R2 marginal calculates the variance of the fixed effects with the years as the moderators. Furthermore, the R2 conditional value was also low which indicates that the effect size of the studies across the year with in count to fixed and random effects also shows that there is no expected publication bias. Thus, coming to the conclusion that the data analysis of the different reef fish species having no strong evidence that increased acidification had effects on behaviour this result seems to be accurate as according to this meta-analysis it presents with no/ extremely low chance of publication bias. So, there are no possible other contribution that could cause such bias as there is none.
 
 ### Task 12: Comparation between meta-analysis of the updated and by Clement et al. (2022) in contribution to publication bias
-describe using references to existing papers what concerns have been raised?
 
-  In the updated meta-analysis the conclusion was that there was no publication bias while the paper did have publication bias. First of all unlike the updated, the paper's meta-analyses the absolute lnRR values were calculated it was found that it was decreasing throughout the period causing the mean effect size to decrease. Also observing the weighted mean effect size magnitudes lnRR across the years, the updated meta-analysis not all data were included to the data, as the outliers of the mean effect size were not included. Thus resulting the flow of the forest plot and the time-lag bias plot to increase.
 
 
 
