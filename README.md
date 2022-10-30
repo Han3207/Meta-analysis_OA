@@ -31,4 +31,4 @@ i) Statistical Analysis and Interpretation
 + Then the file 2 was binded together with the summary table (it was made sure that the species were re-worded) 
 + Then the combined table was then was inserted into the 3rd file. This was for the meta-analysis. Funnel plot, forest plot (orchard plot), time-lag plot, meta-analytic model using the rma.mv function and the escalc function was used. 
 + Then this was setup in a public GitHub Repository (where the link is also attached) 
-[https://github.com/Han3207/Meta-analysis_OA.git]
+[https://github.com/Han3207/Meta-analysis_OA]
